@@ -1,0 +1,191 @@
+<!-- AM chart scirpt files -->
+<script src="https://www.amcharts.com/lib/4/core.js"></script>
+<script src="https://www.amcharts.com/lib/4/charts.js"></script>
+<script src="https://www.amcharts.com/lib/4/themes/animated.js"></script>
+
+<!-- Chart code -->
+<script>
+	//Click event listeners
+	document.addEventListener('DOMContentLoaded', function () {
+		document.getElementById('chartAngle').addEventListener('change', rotateChart);
+		document.getElementById('girdBtn').addEventListener('click', showMainChartTable);
+		document.getElementById('updateBtn').addEventListener('click', updateData);
+		document.getElementById('barChartGirdBtn').addEventListener('click', showBarChartTable);
+
+		var elems = document.querySelectorAll('select');
+		var instances = M.FormSelect.init(elems);
+
+		updateData();
+	});
+	var initMainGridData = [];
+	var initChartData = [];
+	var initInOutData = [];
+
+	// Themes begin
+	am4core.useTheme(am4themes_animated);
+
+	var chart = am4core.create('chartdiv', am4charts.ChordDiagram);
+
+	chart.data = initChartData;
+
+	chart.colors.saturation = 0.7;
+	chart.dataFields.fromName = 'From';
+	chart.dataFields.toName = 'To';
+	chart.dataFields.value = 'Value';
+
+	chart.nodePadding = 0.5;
+	chart.minNodeSize = 0.01;
+	chart.sortBy = 'name';
+
+	chart.startAngle = 0;
+	chart.endAngle = chart.startAngle + 360;
+	chart.fontSize = 14;
+
+	// //Set Chart title
+	// var subTitle = chart.titles.create();
+	// subTitle.text = 'Last updated: 2020-06-02 13:00';
+	// subTitle.fontSize = 12;
+	// subTitle.fontWeight = 400;
+	// subTitle.align = 'left';
+	// subTitle.marginBottom = 10;
+
+	// var mainTitle = chart.titles.create();
+	// mainTitle.text = 'Sample Data';
+	// mainTitle.fontSize = 20;
+	// mainTitle.align = 'left';
+	// mainTitle.marginBottom = 10;
+
+	var nodeTemplate = chart.nodes.template;
+	nodeTemplate.showSystemTooltip = true;
+	nodeTemplate.draggable = false;
+	nodeTemplate.clickable = false;
+	nodeTemplate.tooltipText = "{name}'s : {total}";
+
+	// when rolled over the node, make all the links rolled-over
+	nodeTemplate.events.on('over', function (event) {
+		var node = event.target;
+		node.outgoingDataItems.each(function (dataItem) {
+			if (dataItem.toNode) {
+				dataItem.link.isHover = true;
+				dataItem.toNode.label.isHover = true;
+			}
+		});
+		node.incomingDataItems.each(function (dataItem) {
+			if (dataItem.fromNode) {
+				dataItem.link.isHover = true;
+				dataItem.fromNode.label.isHover = true;
+			}
+		});
+
+		node.label.isHover = true;
+	});
+
+	// when rolled out from the node, make all the links rolled-out
+	nodeTemplate.events.on('out', function (event) {
+		var node = event.target;
+		node.outgoingDataItems.each(function (dataItem) {
+			if (dataItem.toNode) {
+				dataItem.link.isHover = false;
+				dataItem.toNode.label.isHover = false;
+			}
+		});
+		node.incomingDataItems.each(function (dataItem) {
+			if (dataItem.fromNode) {
+				dataItem.link.isHover = false;
+				dataItem.fromNode.label.isHover = false;
+			}
+		});
+
+		node.label.isHover = false;
+	});
+
+	var label = nodeTemplate.label;
+	label.relativeRotation = 90;
+	label.fillOpacity = 0.4;
+	label.fontWeight = 'normal';
+
+	let labelHS = label.states.create('hover');
+	labelHS.properties.fillOpacity = 1;
+	labelHS.properties.fontWeight = 'bold';
+
+	nodeTemplate.cursorOverStyle = am4core.MouseCursorStyle.pointer;
+
+	// link template
+	var linkTemplate = chart.links.template;
+	linkTemplate.strokeOpacity = 0;
+	linkTemplate.fillOpacity = 0.15;
+	linkTemplate.tooltipText = '{fromName} -to-> {toName} :{value.value}';
+
+	var hoverState = linkTemplate.states.create('hover');
+	hoverState.properties.fillOpacity = 1.0;
+	hoverState.properties.strokeOpacity = 1.0;
+
+	//****** Event Listeners *******
+
+	function rotateChart() {
+		let stVal = document.getElementById('chartAngle').value;
+		chart.startAngle = parseInt(stVal, 10);
+		chart.endAngle = chart.startAngle + 360;
+	}
+
+	function updateData() {
+		document.getElementById('progressBar').style.display = 'block';
+		google.script.run.withSuccessHandler(updateDataMain).ebiApi_getEazyBIData();
+	}
+
+	function updateDataMain(ebiResp) {
+		document.getElementById('progressBar').style.display = 'none';
+		if (ebiResp.hasOwnProperty('error')) {
+			M.toast({ html: ebiResp.error, displayLength: 4000 });
+		} else {
+			initChartData = ebiResp.chartData;
+			initMainGridData = ebiResp.agGridData;
+			initInOutData = ebiResp.inOutCounts;
+
+			chart.data = ebiResp.chartData;
+			barchart.data = ebiResp.inOutCounts;
+
+			gridOptionsMain.api.setRowData(ebiResp.agGridData);
+			gridOptionsMain.api.sizeColumnsToFit();
+
+			gridOptionsChart.api.setRowData(chart.data);
+			gridOptionsChart.api.sizeColumnsToFit();
+
+			gridOptionsBarchart.api.setRowData(barchart.data);
+			gridOptionsBarchart.api.sizeColumnsToFit();
+
+			document.querySelector('#selectedRows').innerHTML = initMainGridData.length + ' of ' + initMainGridData.length;
+
+			// mainTitle.text = 'E+ Open Dependencies';
+			// subTitle.text = 'Data as on: ' + ebiResp.updatedOn;
+
+			document.querySelector('#updatedOnDate').innerHTML = 'Data as on: ' + ebiResp.updatedOn;
+
+			M.toast({ html: 'Data imported successfully !!', displayLength: 2500 });
+		}
+	}
+
+	function showMainChartTable() {
+		if (document.querySelector('#gridIcon').innerHTML == 'equalizer') {
+			document.getElementById('mainChartView').style.display = 'block';
+			document.getElementById('mainChartGridView').style.display = 'none';
+			document.querySelector('#gridIcon').innerHTML = 'grid_on';
+		} else {
+			document.getElementById('mainChartView').style.display = 'none';
+			document.getElementById('mainChartGridView').style.display = 'block';
+			document.querySelector('#gridIcon').innerHTML = 'equalizer';
+		}
+	}
+
+	function showBarChartTable() {
+		if (document.querySelector('#barChartgridIcon').innerHTML == 'equalizer') {
+			document.getElementById('barChartView').style.display = 'block';
+			document.getElementById('barChartGridView').style.display = 'none';
+			document.querySelector('#barChartgridIcon').innerHTML = 'grid_on';
+		} else {
+			document.getElementById('barChartView').style.display = 'none';
+			document.getElementById('barChartGridView').style.display = 'block';
+			document.querySelector('#barChartgridIcon').innerHTML = 'equalizer';
+		}
+	}
+</script>

@@ -1,0 +1,53 @@
+<link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-theme-alpine.css" />
+<script>
+	// specify the columns
+	var chartGridColDefs = [
+		{
+			headerName: 'Donor (Team)',
+			field: 'From',
+			filter: 'agTextColumnFilter',
+			flex: 1
+		},
+		{ headerName: 'Beneficiary (Project)', field: 'To', filter: 'agTextColumnFilter', flex: 1 },
+		{
+			headerName: 'Items',
+			field: 'Value',
+			filter: 'agTextColumnFilter',
+			flex: 1,
+			cellRenderer: function (params) {
+				return (
+					'<a href="https://ltmhedge.atlassian.net/issues/?jql=' +
+					encodeURIComponent(params.data.JQL) +
+					'" target="_blank" rel="noopener">' +
+					params.data.Value +
+					'</a>'
+				);
+			}            
+		}
+	];
+
+	// specify the data
+
+	var chartGridDefaultColDef = {
+		sortable: true,
+		filter: true,
+		resizable: true
+	};
+	// let the grid know which columns and what data to use
+	var gridOptionsChart = {
+		defaultColDef: chartGridDefaultColDef,
+		columnDefs: chartGridColDefs,
+		rowData: chart.data,
+		rowSelection: 'single',
+		animateRows: true
+	};
+
+	// lookup the container we want the Grid to use
+	var eGridDivChart = document.querySelector('#chartGrid');
+
+	// create the grid passing in the div to use together with the columns & data we want to use
+	new agGrid.Grid(eGridDivChart, gridOptionsChart);
+
+	//Grid event listners
+	//*** None ****
+</script>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Endeavour - Open Dependency View</title>
+		<base target="_top" />
+		<!--Let browser know website is optimized for mobile-->
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<!--Import Google Icon Font-->
+		<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+		<!-- Compiled and minified CSS -->
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" />
+
+		<?!= include("chart-css"); ?>
+	</head>
+
+	<body>
+		<nav>
+			<div class="nav-wrapper teal darken-4 z-depth-3">
+				<a class="brand-logo left" style="padding-left: 20px;">Endeavour+</a>
+				<ul id="nav-mobile" class="right hide-on-med-and-down">
+					<li style="padding: 0px 20px;">
+						<a href="<?= ScriptApp.getService().getUrl() ?>?v=chart">Dependency View</a>
+					</li>
+					<li style="padding: 0px 20px;"><a href="<?= ScriptApp.getService().getUrl() ?>?v=settings">Settings</a></li>
+				</ul>
+			</div>
+		</nav>
+		<div class="container-lg pt-3">
+			<div class="row" id="progressBarDiv">
+				<div class="progress" id="progressBar">
+					<div class="indeterminate"></div>
+				</div>
+			</div>
+		</div>
+		<div class="container-lg pt-3" style="padding-left: 50px; padding-right: 50px;">
+			<div class="row" id="chartsView">
+				<div class="col s6">
+					<div class="row">
+						<div class="col s10">
+							<h2>All Open Dependency</h2>
+							<small id="updatedOnDate"></small>
+						</div>
+						<div class="col s2" style="text-align: right;">
+							<a class="waves-effect waves-teal btn-flat" id="girdBtn">
+								<i class="material-icons" id="gridIcon">grid_on</i>
+							</a>
+							<a class="waves-effect waves-teal btn-flat" id="updateBtn"><i class="material-icons">autorenew</i></a>
+						</div>
+					</div>
+					<div id="mainChartView">
+						<div class="row">
+							<div id="chartdiv"></div>
+						</div>
+						<div class="row" style="margin: 0px 0px 0px 0px;">
+							<p class="range-field">
+								<input type="range" id="chartAngle" min="0" max="360" value="0" />
+							</p>
+						</div>
+					</div>
+					<div id="mainChartGridView">
+						<div class="col s2"></div>
+						<div class="col s8">
+							<div id="chartGrid" style="height: 500px;" class="ag-theme-balham"></div>
+						</div>
+						<div class="col s2"></div>
+					</div>
+				</div>
+				<div class="col s6">
+					<div class="row">
+						<div class="col s10">
+							<h2>Inbound / Outbound Counts</h2>
+						</div>
+						<div class="col s2" style="text-align: right;">
+							<a class="waves-effect waves-teal btn-flat" id="barChartGirdBtn">
+								<i class="material-icons" id="barChartgridIcon">grid_on</i>
+							</a>
+						</div>
+					</div>
+					<div id="barChartView">
+						<div class="row">
+							<div id="barChartdiv"></div>
+						</div>
+					</div>
+					<div id="barChartGridView">
+						<div class="col s3"></div>
+						<div class="col s6">
+							<div id="barChartGrid" style="height: 450px;" class="ag-theme-balham"></div>
+						</div>
+						<div class="col s3"></div>
+					</div>
+				</div>
+			</div>
+			<div class="row" id="filterButtonDiv">
+				<div style="margin-bottom: 0px;">
+					<div class="col s10" style="padding-left: 0px;">
+						<button onClick="resetFilterMain()">Reset Filters</button>
+						<button onClick="OverdueItems()">OverDue Items</button>
+						<button onClick="DueIn2Weeks()">Due in 2W</button>
+						<button onClick="ExternalDependencies()">External Dependencies</button>
+					</div>
+					<div class="col s2" style="text-align: right;">
+						<div class="example-header" id="rowCountLable">
+							Rows:
+							<span id="selectedRows"></span>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row" id="mainGridDiv">
+				<div id="mainGrid" style="height: 500px;" class="ag-theme-balham"></div>
+			</div>
+		</div>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+		<?!= include("chart-js"); ?>
+		<?!= include("chart-barchart-js"); ?>
+		<?!= include("chart-maingrid-js"); ?>
+		<?!= include("chart-chartgrid-js"); ?>
+		<?!= include("chart-barchartgrid-js"); ?>
+	</body>
+</html>

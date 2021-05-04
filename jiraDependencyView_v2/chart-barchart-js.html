@@ -1,0 +1,64 @@
+<!-- Resources -->
+<!-- <script src="https://www.amcharts.com/lib/4/core.js"></script>
+<script src="https://www.amcharts.com/lib/4/charts.js"></script>
+<script src="https://www.amcharts.com/lib/4/themes/animated.js"></script> -->
+
+<!-- Chart code -->
+<script>
+	// Create chart instance
+	var barchart = am4core.create('barChartdiv', am4charts.XYChart);
+
+	// Add data
+	barchart.data = [{}];
+
+	// Create Chart Legend
+	barchart.legend = new am4charts.Legend();
+	barchart.legend.position = 'top';
+	let markerTemplate = barchart.legend.markers.template;
+	markerTemplate.width = 10;
+	markerTemplate.height = 10;
+
+	// Create axes
+	var categoryAxis = barchart.yAxes.push(new am4charts.CategoryAxis());
+	categoryAxis.dataFields.category = 'workstream';
+	categoryAxis.renderer.grid.template.opacity = 0;
+	categoryAxis.renderer.minGridDistance = 10;
+	categoryAxis.renderer.labels.template.fontSize = 12;
+
+	var valueAxis = barchart.xAxes.push(new am4charts.ValueAxis());
+	valueAxis.min = 0;
+	valueAxis.renderer.grid.template.opacity = 0;
+	valueAxis.renderer.baseGrid.disabled = true;
+	valueAxis.renderer.labels.template.fontSize = 12;
+
+	//Set Chart title
+	// var bCharMainTitle = barchart.titles.create();
+	// bCharMainTitle.text = 'Inbound / OutBound Counts';
+	// bCharMainTitle.fontSize = 20;
+	// bCharMainTitle.fontWeight = "bold";
+	// bCharMainTitle.align = 'left';
+	// bCharMainTitle.marginBottom = 10;
+
+	// Create series
+	function createSeries(field, name, colorValue) {
+		var series = barchart.series.push(new am4charts.ColumnSeries());
+		series.dataFields.valueX = field;
+		series.dataFields.categoryY = 'workstream';
+		series.stacked = true;
+		series.name = name;
+		series.fill = colorValue;
+		series.stroke = colorValue;
+
+		//Display tooltip on mousehover
+		series.columns.template.tooltipText = '[bold]{categoryY}[/]\n[font-size:10px]{name}: {valueX}';
+
+		// Add label
+		var labelBullet = series.bullets.push(new am4charts.LabelBullet());
+		labelBullet.label.text = '{valueX}';
+		labelBullet.label.fontSize = 12;
+		labelBullet.locationX = 0.5;
+	}
+
+	createSeries('inbound', 'Inbound', '#1EAD45');
+	createSeries('outbound', 'Outbound', '#287C23');
+</script>

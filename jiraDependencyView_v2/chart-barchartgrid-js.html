@@ -1,0 +1,50 @@
+<script>
+	// default Col definitions
+	var barChartGridDefaultColDef = {
+		sortable: true,
+		filter: true,
+		resizable: true
+	};
+
+	// specify the columns
+	var barChartGridColDefs = [
+		{
+			headerName: 'Workstream',
+			field: 'workstream',
+			filter: 'agTextColumnFilter',
+			flex: 1
+		},
+		{
+			headerName: 'Inbound',
+			field: 'inbound',
+			filter: 'agNumberColumnFilter',
+			flex: 1
+		},
+		{
+			headerName: 'Outbound',
+			field: 'outbound',
+			filter: 'agNumberColumnFilter',
+			flex: 1
+		}
+	];
+
+	// let the grid know which columns and what data to use
+	var gridOptionsBarchart = {
+		defaultColDef: barChartGridDefaultColDef,
+		columnDefs: barChartGridColDefs,
+		rowData: barchart.data,
+		rowSelection: 'single',
+		animateRows: true
+	};
+
+	console.log(barchart.data);
+
+	// lookup the container we want the Grid to use
+	var eBarGridDivChart = document.querySelector('#barChartGrid');
+
+	// create the grid passing in the div to use together with the columns & data we want to use
+	new agGrid.Grid(eBarGridDivChart, gridOptionsBarchart);
+
+	//Grid event listners
+	//*** None ****
+</script>

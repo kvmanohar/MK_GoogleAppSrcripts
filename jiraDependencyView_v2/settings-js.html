@@ -1,0 +1,33 @@
+<script>
+	//Click event listeners
+	document.addEventListener('DOMContentLoaded', function () {
+		document.getElementById('updSettingsBtn').addEventListener('click', updateSettings);
+        document.getElementById('progressBar').style.display = 'block'; 
+        google.script.run.withSuccessHandler(populateSettings).readTokenFile('jira_token.txt');        
+	});
+    
+    function populateSettings(jiraDetails){
+       document.getElementById('progressBar').style.display = 'none';     
+       if (jiraDetails.length > 0){
+          document.getElementById('access_token').value = jiraDetails[0];
+          document.getElementById('jira_id').value = jiraDetails[1];           
+          M.updateTextFields();
+       }
+    }
+    
+    function updateSettings(){
+      document.getElementById('progressBar').style.display = 'block'; 
+      let jiraDetails = [];
+      jiraDetails.push(document.getElementById('access_token').value);
+      jiraDetails.push(document.getElementById('jira_id').value);
+      
+      google.script.run.withSuccessHandler(updTokenResponse).updateTokenFile(jiraDetails);
+    }
+    
+    function updTokenResponse(resp){
+      document.getElementById('progressBar').style.display = 'none';     
+      M.toast({html:resp, displayLength: 2500});
+    }
+   
+</script>
+

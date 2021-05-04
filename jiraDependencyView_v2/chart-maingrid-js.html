@@ -1,0 +1,264 @@
+<!-- Ag Grid scirpt files -->
+<script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-grid.css" />
+<link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-theme-balham.css" />
+
+<script>
+	// specify the columns
+	var mainGridColDefs = [
+		{
+			headerName: 'Donor (Team)',
+			field: 'From',
+			width: 80,
+			filter: 'agTextColumnFilter'
+		},
+		{
+			headerName: 'Key',
+			field: 'Key',
+			width: 60,
+			filter: 'agTextColumnFilter',
+
+			cellRenderer: function (params) {
+				return (
+					'<a href="https://ltmhedge.atlassian.net/browse/' +
+					params.value +
+					'" target="_blank" rel="noopener">' +
+					params.value +
+					'</a>'
+				);
+			}
+		},
+		{ headerName: 'Priority', field: 'priority', width: 80, filter: 'agTextColumnFilter' },
+		{ headerName: 'Summary', field: 'Summary', width: 400, filter: 'agTextColumnFilter' },
+		{
+			headerName: 'Expected Date',
+			field: 'Expected Date',
+			width: 80,
+			filter: 'agDateColumnFilter',
+			filterParams: {
+				comparator: agGridDateCompare
+			}
+		},
+		{
+			headerName: 'Status',
+			field: 'status',
+			width: 80,
+			filter: 'agTextColumnFilter'
+		},
+		{
+			headerName: 'Due Date',
+			field: 'due date',
+			width: 80,
+			filter: 'agDateColumnFilter',
+			filterParams: {
+				comparator: agGridDateCompare
+			},
+
+			cellClassRules: {
+				'rag-red': function (param) {
+					let d = new Date();
+					let todayDt = [d.getFullYear(), ('0' + (d.getMonth() + 1)).slice(-2), ('0' + d.getDate()).slice(-2)].join(
+						'-'
+					);
+					if (param.value != null) return new Date(todayDt) > new Date(param.value);
+				}
+			}
+		},
+		{ headerName: 'Beneficiary (Project)', field: 'To', width: 100 },
+		{ headerName: 'Externa/Internal', field: 'Issue Category', width: 80, filter: 'agTextColumnFilter' },
+		{
+			headerName: 'Fix Version',
+			field: 'FixVersions',
+			width: 120,
+			filter: 'agTextColumnFilter'
+		},
+		{ headerName: 'Labels', field: 'All labels', width: 100, filter: 'agTextColumnFilter' }
+	];
+
+	// specify the data
+	var rowData = [];
+
+	var mainGridDefaultColDef = {
+		sortable: true,
+		filter: true,
+		resizable: true,
+		sortable: true
+	};
+	// let the grid know which columns and what data to use
+	var gridOptionsMain = {
+		defaultColDef: mainGridDefaultColDef,
+		columnDefs: mainGridColDefs,
+		rowData: rowData,
+		rowSelection: 'single',
+		animateRows: true,
+		//		onSelectionChanged: onSelectionChanged,
+		onFilterChanged: onFilterChanged
+	};
+
+	// lookup the container we want the Grid to use
+	var eGridDiv = document.querySelector('#mainGrid');
+
+	// create the grid passing in the div to use together with the columns & data we want to use
+	new agGrid.Grid(eGridDiv, gridOptionsMain);
+
+	function agGridDateCompare(filterLocalDateAtMidnight, cellValue) {
+		var dateAsString = cellValue;
+		var dateParts = dateAsString.split('-');
+		var cellDate = new Date(Number(dateParts[0]), Number(dateParts[1]) - 1, Number(dateParts[2]));
+
+		if (filterLocalDateAtMidnight.getTime() === cellDate.getTime()) return 0;
+
+		if (cellDate < filterLocalDateAtMidnight) return -1;
+
+		if (cellDate > filterLocalDateAtMidnight) return 1;
+	}
+
+	//Grid event listners
+	//	function onSelectionChanged() {
+	//		var selectedRows = gridOptionsMain.api.getSelectedRows();
+	//		document.querySelector('#selectedRows').innerHTML = selectedRows.length === 1 ? selectedRows[0].Key : '';
+	//	}
+
+	function onFilterChanged() {
+		let filterCnt = gridOptionsMain.api.getDisplayedRowCount();
+
+		if (filterCnt == 0) {
+			chart.data = [{}];
+			barchart.data = [{}];
+		} else if (filterCnt == initMainGridData.length) {
+			chart.data = initChartData;
+			barchart.data = initInOutData;
+		} else {
+			let filterData = [];
+			gridOptionsMain.api.forEachNodeAfterFilter(function (node, index) {
+				filterData.push(node.data);
+			});
+			chart.data = createChartData(filterData);
+			barchart.data = createInOutboundCounts(chart.data);
+		}
+
+		gridOptionsChart.api.setRowData(chart.data);
+		gridOptionsChart.api.sizeColumnsToFit();
+
+		gridOptionsBarchart.api.setRowData(barchart.data);
+		gridOptionsBarchart.api.sizeColumnsToFit();
+
+		document.querySelector('#selectedRows').innerHTML = filterCnt + ' of ' + initMainGridData.length;
+	}
+
+	function createChartData(agGridData) {
+		//	let agGridData = JSON.parse(readDataFromFile('agGridData.txt'));
+		let chartData = [];
+		agGridData.map((issueRow) => {
+			let teamName = issueRow['Team'].split(',');
+			let fromNames = issueRow['From'].split(',');
+			fromNames.map((frm, index) => {
+				let chRow = chartData.find((val) => val['To'] == issueRow['To'] && val['From'] == frm);
+				if (typeof chRow != 'undefined') chRow['Value'] += 1;
+				else chartData.push({ To: issueRow.To, From: frm, Team: teamName[index], Value: 1 });
+			});
+		});
+
+		//Add JQL for each of the chart data row
+		chartData.map((cdata) => {
+			let jql = 'type=Dependency AND resolution is EMPTY AND ';
+
+			if (cdata['Team'] == '(none)') jql = jql + 'project in ("' + cdata['To'] + '") AND cf[10105] is EMPTY';
+			else jql = jql + 'project in ("' + cdata['To'] + '") AND cf[10105] in ("' + cdata['Team'] + '")';
+
+			cdata['JQL'] = jql;
+		});
+
+		return chartData;
+	}
+
+	function createInOutboundCounts(chartData) {
+		let inOutCounts = [];
+		chartData.map((dataRow) => {
+			let currTo = dataRow['To'];
+			let chkRow = inOutCounts.filter((val) => val['workstream'] == currTo);
+			if (chkRow.length == 0) {
+				let toArray = chartData.filter((row) => row['To'] == currTo);
+				let totalInbound = 0;
+				let totalOutboud = 0;
+				toArray.map((row) => (totalInbound += row['Value']));
+				let fromArray = chartData.filter((row) => row['From'] == currTo);
+				if (fromArray.length > 0) fromArray.map((row) => (totalOutboud += row['Value']));
+				inOutCounts.push({
+					workstream: currTo,
+					inbound: totalInbound,
+					outbound: totalOutboud
+				});
+			}
+		});
+		return inOutCounts;
+	}
+
+	function resetFilterMain() {
+		gridOptionsMain.api.setFilterModel(null);
+	}
+
+	function OverdueItems() {
+		var dateFilterComponent = gridOptionsMain.api.getFilterInstance('due date');
+		let d = new Date();
+		date = [d.getFullYear(), ('0' + (d.getMonth() + 1)).slice(-2), ('0' + d.getDate()).slice(-2)].join('-');
+
+		dateFilterComponent.setModel({
+			type: 'lessThan',
+			dateFrom: date,
+			dateTo: null
+		});
+
+		gridOptionsMain.api.onFilterChanged();
+	}
+
+	function DueIn2Weeks() {
+		var dateFilterComponent = gridOptionsMain.api.getFilterInstance('due date');
+
+		let d1 = new Date();
+		d1.setDate(new Date().getDate() - 1);
+		date1 = [d1.getFullYear(), ('0' + (d1.getMonth() + 1)).slice(-2), ('0' + d1.getDate()).slice(-2)].join('-');
+
+		let d2 = new Date();
+		d2.setDate(new Date().getDate() + 14);
+		date2 = [d2.getFullYear(), ('0' + (d2.getMonth() + 1)).slice(-2), ('0' + d2.getDate()).slice(-2)].join('-');
+
+		dateFilterComponent.setModel({
+			condition1: {
+				type: 'greaterThan',
+				dateFrom: date1,
+				dateTo: null
+			},
+			operator: 'AND',
+			condition2: {
+				type: 'lessThan',
+				dateFrom: date2,
+				dateTo: null
+			}
+		});
+
+		gridOptionsMain.api.onFilterChanged();
+	}
+
+	function InternalDependencies() {
+		var filterInstance = gridOptionsMain.api.getFilterInstance('Issue Category');
+		filterInstance.setModel({
+			filterType: 'text',
+			type: 'equals',
+			filter: 'Internal'
+		});
+
+		gridOptionsMain.api.onFilterChanged();
+	}
+
+	function ExternalDependencies() {
+		var filterInstance = gridOptionsMain.api.getFilterInstance('Issue Category');
+		filterInstance.setModel({
+			filterType: 'text',
+			type: 'equals',
+			filter: 'External'
+		});
+
+		gridOptionsMain.api.onFilterChanged();
+	}
+</script>

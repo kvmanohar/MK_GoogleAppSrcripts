@@ -1,0 +1,44 @@
+<!-- Ag Grid scirpt files -->
+<script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/@ag-grid-community/all-modules@24.1.0/dist/styles/ag-grid.css" />
+<link rel="stylesheet" href="https://unpkg.com/@ag-grid-community/all-modules@24.1.0/dist/styles/ag-theme-alpine.css" />
+<script>
+	var gridColDefs = [
+      { headerName: "Make", field: "make", checkboxSelection: true },
+      { headerName: "Model", field: "model" },
+      { headerName: "Price", field: "price" }
+  ]
+
+  var rowData = [
+    { make: "Toyota", model: "Celica", price: 35000 },
+    { make: "Ford", model: "Mondeo", price: 32000 },
+    { make: "Porsche", model: "Boxter", price: 72000 }
+  ]
+
+  var gridDefaultColDef = {
+		sortable: true,
+		filter: true,
+		resizable: true,
+		sortable: true
+	};
+
+	var gridOptions = {
+		defaultColDef: gridDefaultColDef,
+		columnDefs: gridColDefs,
+		rowData: rowData,
+		rowSelection: 'multiple',
+		animateRows: true,
+
+		onFilterChanged: function(e) { console.log('The filter changed')}
+	};
+
+  // lookup the div we want the Grid to use
+	var eGridDiv = document.querySelector('#agGridDiv');
+  new agGrid.Grid(eGridDiv, gridOptions)
+  
+  // agGrid.simpleHttpRequest({url: 'https://www.ag-grid.com/example-assets/row-data.json'}).then(function(data){
+  //     gridOptions.api.setRowData(data);
+  // })
+
+
+</script>
